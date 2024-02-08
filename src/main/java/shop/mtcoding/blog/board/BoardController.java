@@ -49,7 +49,7 @@ public class BoardController {
 
         //필수 로직
         boardRepository.save(writeUserDTO);
-        request.setAttribute("sessionUser",);
+        //request.setAttribute("sessionUser",);
 
         return "redirect:/";
     }
@@ -59,7 +59,7 @@ public class BoardController {
 
         return "redirect:/";
     }
-
+    //
     @PostMapping("/board/{id}/delete")
     public String delete(@PathVariable int id,HttpServletRequest request){
         // Board sessionUser = session.getAttribute("bo")
