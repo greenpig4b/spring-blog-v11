@@ -21,12 +21,14 @@
             <td>{{author}}</td>
             <td>
                 <div class="d-flex">
+                {{#me}}
                     <form action="#">
                         <button class="btn btn-danger">삭제</button>
                     </form>
                     <form action="/board/1/updateForm" method="get">
                         <button class="btn btn-warning">수정</button>
                     </form>
+                {{/me}}
                 </div>
             </td>
         </tr>

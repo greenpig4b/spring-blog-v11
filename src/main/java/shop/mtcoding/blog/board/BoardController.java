@@ -9,7 +9,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import java.util.List;
+import java.util.ArrayList;
+import java.util.List ;
 import java.util.Objects;
 
 @RequiredArgsConstructor
@@ -21,8 +22,41 @@ public class BoardController {
 
     @GetMapping({"/","/board"})
     public String index() {
+        // 세션에 userId가 있는지 확인
+        // userId가 없으면 만들어서 삽입
+
+        Object userId = session.getAttribute("userId");
+        if(userId == null){
+            // 데이터베이스에 있는 userId의 다음 숫자 넣는다.
+            session.setAttribute("userId", boardRepository.getNextUserId() + 1);
+        }
+
         List<Board> boardList = boardRepository.findAll();
-        session.setAttribute("boardlist",boardList);
+        List<BoardRequest.ViewDto> viewDtos = new ArrayList<>();
+        for (int i = 0; i < boardList.size(); i++) {
+            Board board = boardList.get(i);
+            BoardRequest.ViewDto viewDto = BoardRequest.ViewDto.builder()
+                                .title(board.getTitle())
+                                .author(board.getAuthor())
+                                .id(board.getId())
+                                .userId(board.getUserId())
+                                .content(board.getContent())
+                                .build();
+
+            if(viewDto.getUserId() == (int) session.getAttribute("userId")){
+                viewDto.setMe(true);
+            }
+
+            viewDtos.add(viewDto);
+        }
+        session.setAttribute("boardlist", viewDtos);
+
+        return "index";
+    }
+
+    @GetMapping("/session")
+    public String session() {
+        System.out.println(session.getAttribute("userId"));
 
         return "index";
     }
@@ -40,16 +74,21 @@ public class BoardController {
     }
 
     @PostMapping("/board/save")
-    public String save(BoardRequest.WriteUserDTO writeUserDTO,HttpServletRequest request){
+    public String save(BoardRequest.WriteUserDTO writeUserDTO, HttpServletRequest request){
         //조건로직
-
         if (writeUserDTO.getAuthor() == ""){
             return "error/400";
         }
+        writeUserDTO.setUserId((int) session.getAttribute("userId"));
 
-        //필수 로직
-        boardRepository.save(writeUserDTO);
-        //request.setAttribute("sessionUser",);
+        // writeUserDTO.getAuthor() == database.author and writeUserDTO.getUserId() != database.useid
+        List<Board> board = boardRepository.findId(writeUserDTO);
+        if (board.size() == 0){
+            //필수 로직
+            boardRepository.save(writeUserDTO);
+        }else{
+            return "error/400";
+        }
 
         return "redirect:/";
     }
@@ -63,7 +102,7 @@ public class BoardController {
     @PostMapping("/board/{id}/delete")
     public String delete(@PathVariable int id,HttpServletRequest request){
         // Board sessionUser = session.getAttribute("bo")
-        Board board = boardRepository.findId(id);
+//        Board board = boardRepository.findId(id);
         //if (board.getUserId() != session)
         return "redirect:/";
     }

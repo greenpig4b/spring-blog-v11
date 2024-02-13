@@ -21,13 +21,22 @@ public class BoardRepository {
         return query.getResultList();
     }
 
-    public Board findId(int id){
-        Query query = em.createNativeQuery("select * from board_tb where user_id = ?",Board.class);
-        query.setParameter(1,id);
+    public List<Board> findId(BoardRequest.WriteUserDTO writeUserDTO){
+        Query query = em.createNativeQuery("SELECT * FROM board_tb WHERE author = ? AND user_id != ? ",Board.class);
+        query.setParameter(1,writeUserDTO.getAuthor());
+        query.setParameter(2,writeUserDTO.getUserId());
 
-        Board board = (Board)query.getSingleResult();
-        return board;
+        return query.getResultList();
 
+    }
+
+    public List<Board> findUsersById(BoardRequest.WriteUserDTO writeUserDTO){
+        Query query = em.createNativeQuery("select * from board_tb where user_id != ? and author = ?", Board.class);
+
+        query.setParameter(1,writeUserDTO.getUserId());
+        query.setParameter(2,writeUserDTO.getAuthor());
+
+        return query.getResultList();
     }
 
 
@@ -41,6 +50,12 @@ public class BoardRepository {
         query.setParameter(3,writeUserDTO.getContent());
         query.setParameter(4,writeUserDTO.getUserId());
         query.executeUpdate();
+    }
+
+    public Integer getNextUserId(){
+        Query query = em.createNativeQuery("SELECT MAX(user_id) FROM board_tb;", Integer.class);
+
+        return (Integer) query.getSingleResult();
     }
 
 }
